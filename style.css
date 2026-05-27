@@ -1,0 +1,61 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: #5B7E3C;
+  color: #E8F5BD;
+  font-family: "Press Start 2P", monospace;
+}
+
+.game-wrap {
+  width: min(920px, 100%);
+  text-align: center;
+}
+
+h1 {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  margin-bottom: 4px;
+  color: #E8F5BD;
+  text-shadow: 2px 2px 0 #5B7E3C;
+  letter-spacing: 2px;
+}
+
+.hint {
+  font-size: 0.65rem;
+  margin-bottom: 8px;
+  color: #A2CB8B;
+}
+
+.key {
+  color: #E8F5BD;
+}
+
+.hud {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 8px;
+  font-size: 0.7rem;
+  color: #A2CB8B;
+}
+
+canvas {
+  width: 100%;
+  max-width: 900px;
+  height: auto;
+  aspect-ratio: 900 / 320;
+  border: 3px solid #A2CB8B;
+  border-radius: 6px;
+  background: #E8F5BD;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  box-shadow:
+    0 0 0 1px #5B7E3C,
+    0 6px 24px rgba(0,0,0,0.5);
+}
