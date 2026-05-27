@@ -9,8 +9,8 @@ body {
   display: grid;
   place-items: center;
   padding: 16px;
-  background: #2F5249;
-  color: #97B067;
+  background: #000;
+  color: #fff;
   font-family: "Press Start 2P", monospace;
 }
 
@@ -22,19 +22,19 @@ body {
 h1 {
   font-size: clamp(1.5rem, 3vw, 2rem);
   margin-bottom: 4px;
-  color: #E3DE61;
-  text-shadow: 2px 2px 0 #2F5249;
+  color: #fff;
+  text-shadow: 2px 2px 0 #444;
   letter-spacing: 2px;
 }
 
 .hint {
   font-size: 0.65rem;
   margin-bottom: 8px;
-  color: #97B067;
+  color: #aaa;
 }
 
 .key {
-  color: #E3DE61;
+  color: #fff;
 }
 
 .hud {
@@ -42,7 +42,7 @@ h1 {
   justify-content: center;
   margin-bottom: 8px;
   font-size: 0.7rem;
-  color: #97B067;
+  color: #bbb;
 }
 
 canvas {
@@ -50,12 +50,12 @@ canvas {
   max-width: 900px;
   height: auto;
   aspect-ratio: 900 / 320;
-  border: 3px solid #E3DE61;
+  border: 3px solid #fff;
   border-radius: 6px;
-  background: #97B067;
+  background: #ddd;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   box-shadow:
-    0 0 0 1px #2F5249,
-    0 6px 24px rgba(0,0,0,0.5);
+    0 0 0 1px #444,
+    0 6px 24px rgba(0,0,0,0.8);
 }

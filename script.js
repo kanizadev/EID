@@ -137,7 +137,7 @@ function updateHUD() {
   scoreEl.textContent = `Score:${Math.floor(score)} Coins:${coinsCollected} SPD:${spd}`;
 }
 
-const C = { dark: "#2F5249", mid: "#437057", light: "#97B067", accent: "#E3DE61" };
+const C = { dark: "#000000", mid: "#666666", light: "#BBBBBB", accent: "#FFFFFF" };
 
 const AudioCtx = window.AudioContext || window.webkitAudioContext;
 let audioCtx;
@@ -194,12 +194,7 @@ function spawnStar() {
 }
 
 function drawBackground() {
-  const c = getSkyColor();
-  const grad = ctx.createLinearGradient(0, 0, 0, WORLD.groundY);
-  grad.addColorStop(0, c.top);
-  grad.addColorStop(0.6, c.mid);
-  grad.addColorStop(1, c.bot);
-  ctx.fillStyle = grad;
+  ctx.fillStyle = "#ddd";
   ctx.fillRect(0, 0, WORLD.width, WORLD.groundY);
 
   for (const s of stars) {
@@ -270,7 +265,7 @@ function drawSparkles() {
 
 function drawGround() {
   const t = Math.min(1, (speed - 5.6) / 6.4);
-  const dirt = lerpColor(C.dark, "#3a5c20", t);
+  const dirt = lerpColor("#222222", C.dark, t);
   ctx.fillStyle = dirt;
   ctx.fillRect(0, WORLD.groundY, WORLD.width, WORLD.height - WORLD.groundY);
   ctx.fillStyle = lerpColor(C.mid, C.dark, t);
@@ -280,8 +275,8 @@ function drawGround() {
 
   for (let i = 0; i < 10; i++) {
     const gx = ((i * 90 - frameCount * speed * 0.8) % 920) - 10;
-    ctx.fillStyle = lerpColor(C.dark, "#3a5c20", t);
-    ctx.globalAlpha = 0.3 + t * 0.3;
+    ctx.fillStyle = C.mid;
+    ctx.globalAlpha = 0.2 + t * 0.3;
     ctx.fillRect(gx, WORLD.groundY + 6, 20, 2);
   }
   ctx.globalAlpha = 1;
