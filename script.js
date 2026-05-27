@@ -15,7 +15,9 @@ const COW = {
   height: 44,
   vy: 0,
   gravity: 0.65,
-  jumpPower: -12.5
+  jumpPower: -12.5,
+  jumps: 0,
+  maxJumps: 2
 };
 
 let clouds = [];
@@ -100,8 +102,10 @@ function resetGame() {
   maxCombo = 0;
   shakeX = 0;
   shakeY = 0;
+  gameOverTimer = 0;
   COW.y = WORLD.groundY - COW.height;
   COW.vy = 0;
+  COW.jumps = 0;
   updateHUD();
 }
 
@@ -134,6 +138,33 @@ function updateHUD() {
 }
 
 const C = { dark: "#2F5249", mid: "#437057", light: "#97B067", accent: "#E3DE61" };
+
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx;
+
+function initAudio() {
+  if (!audioCtx) audioCtx = new AudioCtx();
+}
+
+function playTone(freq, dur, type = "square", vol = 0.15) {
+  try {
+    initAudio();
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, audioCtx.currentTime);
+    g.gain.setValueAtTime(vol, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+    o.connect(g);
+    g.connect(audioCtx.destination);
+    o.start();
+    o.stop(audioCtx.currentTime + dur);
+  } catch (_) {}
+}
+
+function sfxJump() { playTone(500, 0.12); setTimeout(() => playTone(700, 0.08), 40); }
+function sfxCoin() { playTone(900, 0.06); setTimeout(() => playTone(1200, 0.08), 60); }
+function sfxDie() { playTone(300, 0.15, "sawtooth", 0.2); setTimeout(() => playTone(150, 0.3, "sawtooth", 0.2), 120); }
 
 function getSkyColor() {
   const t = Math.min(1, (speed - 5.6) / 6.4);
@@ -312,6 +343,14 @@ function drawCow() {
 
     ctx.fillStyle = C.accent;
     ctx.fillRect(x + 57, y + 20 + bob - tilt, 2, 1);
+
+    if (!onGround && COW.jumps < COW.maxJumps) {
+      const jx = x + 26, jy = y + bob - 6;
+      ctx.fillStyle = C.accent;
+      ctx.fillRect(jx, jy, 4, 4);
+      ctx.fillRect(jx + 2, jy + 2, 4, 4);
+      ctx.fillRect(jx + 4, jy, 4, 4);
+    }
   }
 
 function drawObstacle(ob) {
@@ -372,6 +411,18 @@ function intersects(a, b) {
   );
 }
 
+function spawnExplosion(x, y) {
+  for (let i = 0; i < 20; i++) {
+    sparkles.push({
+      x, y,
+      vx: randomRange(-5, 5),
+      vy: randomRange(-5, 3),
+      life: 1,
+      size: randomRange(3, 7)
+    });
+  }
+}
+
 function updateCow() {
   const wasInAir = COW.y < WORLD.groundY - COW.height - 0.1;
   COW.vy += COW.gravity;
@@ -386,6 +437,7 @@ function updateCow() {
       }
     }
     COW.vy = 0;
+    COW.jumps = 0;
   }
 
   if (COW.vy === 0 && Math.random() < 0.15) {
@@ -432,8 +484,11 @@ function updateObstacles() {
     ob.x -= speed;
     if (intersects(cowBox, ob)) {
       gameOver = true;
-      shakeX = 6;
-      shakeY = 4;
+      gameOverTimer = 0;
+      shakeX = 8;
+      shakeY = 5;
+      sfxDie();
+      spawnExplosion(COW.x + 30, COW.y + 20);
       if (score > highScore) {
         highScore = Math.floor(score);
         localStorage.setItem("cowRunHighScore", highScore);
@@ -455,6 +510,7 @@ function updateCoins() {
       coinsCollected += 1;
       combo += 1;
       if (combo > maxCombo) maxCombo = combo;
+      sfxCoin();
       spawnSparkle(coin.x, coin.y);
     }
   }
@@ -664,6 +720,8 @@ function draw() {
   if (shaken) ctx.restore();
 }
 
+let gameOverTimer = 0;
+
 function loop() {
   if (!gameOver) {
     updateClouds();
@@ -677,25 +735,49 @@ function loop() {
     updateScoreAndSpeed();
     draw();
   } else {
-    drawGameOver();
+    if (gameOverTimer < 30) {
+      updateDust();
+      updateSparkles();
+      draw();
+      gameOverTimer++;
+    } else {
+      drawGameOver();
+    }
   }
 
   requestAnimationFrame(loop);
 }
 
+function jump() {
+  if (gameOver) return;
+  const onGround = COW.y >= WORLD.groundY - COW.height - 0.1;
+  if (onGround) {
+    COW.vy = COW.jumpPower;
+    COW.jumps = 1;
+    sfxJump();
+  } else if (COW.jumps < COW.maxJumps) {
+    COW.vy = COW.jumpPower * 0.85;
+    COW.jumps += 1;
+    sfxJump();
+    for (let i = 0; i < 3; i++) {
+      dust.push({ x: COW.x + 20, y: COW.y + 40, life: 1 });
+    }
+  }
+}
+
 document.addEventListener("keydown", (event) => {
   if (event.code === "Space") {
     event.preventDefault();
-    const onGround = COW.y >= WORLD.groundY - COW.height - 0.1;
-    if (!gameOver && onGround) {
-      COW.vy = COW.jumpPower;
-    }
+    jump();
   }
 
   if (event.code === "Enter" && gameOver) {
     resetGame();
   }
 });
+
+canvas.addEventListener("mousedown", (e) => { e.preventDefault(); jump(); });
+canvas.addEventListener("touchstart", (e) => { e.preventDefault(); jump(); });
 
 resetGame();
 loop();
