@@ -81,6 +81,7 @@ function resetGame() {
   clouds = [];
   hills = [];
   stars = [];
+  for (let i = 0; i < 20; i++) spawnStar();
   dust = [];
   sparkles = [];
   obstacles = [];
@@ -132,7 +133,7 @@ function updateHUD() {
   scoreEl.textContent = `Score:${Math.floor(score)} Coins:${coinsCollected} SPD:${spd}`;
 }
 
-const C = { dark: "#5B7E3C", mid: "#A2CB8B", light: "#E8F5BD" };
+const C = { dark: "#2F5249", mid: "#437057", light: "#97B067", accent: "#E3DE61" };
 
 function getSkyColor() {
   const t = Math.min(1, (speed - 5.6) / 6.4);
@@ -155,8 +156,9 @@ function spawnStar() {
   stars.push({
     x: randomRange(0, WORLD.width),
     y: randomRange(2, WORLD.groundY * 0.5),
-    size: randomRange(1, 2.5),
-    twinkle: Math.random() * Math.PI * 2
+    size: randomRange(1, 3),
+    twinkle: Math.random() * Math.PI * 2,
+    speed: randomRange(0.02, 0.08)
   });
 }
 
@@ -169,15 +171,19 @@ function drawBackground() {
   ctx.fillStyle = grad;
   ctx.fillRect(0, 0, WORLD.width, WORLD.groundY);
 
-  if (speed > 8) {
-    for (const s of stars) {
-      const alpha = 0.3 + Math.sin(frameCount * 0.05 + s.twinkle) * 0.3;
-      ctx.globalAlpha = Math.min(1, alpha * (speed - 8) / 4);
-      ctx.fillStyle = C.light;
-      ctx.fillRect(s.x, s.y, s.size, s.size);
+  for (const s of stars) {
+    const glow = Math.sin(frameCount * s.speed + s.twinkle);
+    const alpha = 0.3 + glow * 0.4;
+    const sSize = s.size + glow * 0.5;
+    ctx.globalAlpha = Math.max(0.1, alpha);
+    ctx.fillStyle = C.accent;
+    ctx.fillRect(s.x, s.y, sSize, sSize);
+    if (glow > 0.6) {
+      ctx.fillRect(s.x - 1, s.y + sSize / 2 - 0.5, sSize + 2, 1);
+      ctx.fillRect(s.x + sSize / 2 - 0.5, s.y - 1, 1, sSize + 2);
     }
-    ctx.globalAlpha = 1;
   }
+  ctx.globalAlpha = 1;
 }
 
 function drawHills() {
@@ -205,7 +211,7 @@ function drawClouds() {
     ctx.fillRect(c.x, c.y + 4, c.width, c.height - 8);
     ctx.fillRect(c.x + 4, c.y, c.width - 8, c.height);
     ctx.fillRect(c.x + 8, c.y + 2, c.width - 16, c.height - 4);
-    ctx.fillStyle = C.mid;
+    ctx.fillStyle = C.dark;
     ctx.fillRect(c.x + 12, c.y + 4, 6, 4);
     ctx.fillRect(c.x + c.width - 20, c.y + 6, 5, 3);
     ctx.fillStyle = C.light;
@@ -225,7 +231,7 @@ function drawDust() {
 function drawSparkles() {
   for (const s of sparkles) {
     ctx.globalAlpha = s.life;
-    ctx.fillStyle = C.light;
+    ctx.fillStyle = C.accent;
     ctx.fillRect(s.x, s.y, s.size, s.size);
   }
   ctx.globalAlpha = 1;
@@ -255,53 +261,57 @@ function drawCow() {
     const y = COW.y;
     const step = Math.floor(frameCount / 6) % 4;
     const onGround = COW.y >= WORLD.groundY - COW.height - 0.1;
-    const bob = onGround ? 0 : -2;
+    const vy = COW.vy;
+    const goingUp = vy < 0;
+    const velT = Math.min(1, Math.abs(vy) / 14);
+    const bob = onGround ? 0 : -3 - velT * 4;
+    const tilt = onGround ? 0 : (goingUp ? -1 : 1);
   
     ctx.fillStyle = C.dark;
     ctx.globalAlpha = 0.3;
-    const shadowW = onGround ? 48 : 38;
-    ctx.fillRect(x + 10, WORLD.groundY - 3, shadowW, 5);
+    const shadowW = onGround ? 48 : 28 + velT * 10;
+    ctx.fillRect(x + 10, WORLD.groundY - 3, shadowW, 4);
     ctx.globalAlpha = 1;
 
     ctx.fillStyle = C.dark;
-  
-    ctx.fillRect(x + 8, y + 14 + bob, 40, 20);
-    ctx.fillRect(x + 40, y + 10 + bob, 18, 16);
-    ctx.fillRect(x + 54, y + 16 + bob, 8, 8);
-  
-    ctx.fillRect(x + 42, y + 6 + bob, 4, 4);
-    ctx.fillRect(x + 52, y + 6 + bob, 4, 4);
-  
-    ctx.fillRect(x + 40, y + 10 + bob, 3, 3);
-    ctx.fillRect(x + 55, y + 10 + bob, 3, 3);
-  
-    ctx.fillStyle = C.light;
-    ctx.fillRect(x + 47, y + 15 + bob, 2, 2);
-    ctx.fillRect(x + 52, y + 15 + bob, 2, 2);
-  
-    ctx.fillRect(x + 14, y + 18 + bob, 8, 6);
-    ctx.fillRect(x + 28, y + 22 + bob, 6, 5);
-    ctx.fillRect(x + 38, y + 17 + bob, 5, 5);
-  
+
+    ctx.fillRect(x + 8, y + 14 + bob + tilt, 40, 20);
+    ctx.fillRect(x + 40, y + 10 + bob - tilt, 18, 16);
+    ctx.fillRect(x + 54, y + 16 + bob - tilt, 8, 8);
+
+    ctx.fillRect(x + 42, y + 6 + bob - tilt, 4, 4);
+    ctx.fillRect(x + 52, y + 6 + bob - tilt, 4, 4);
+
+    ctx.fillRect(x + 40, y + 10 + bob - tilt, 3, 3);
+    ctx.fillRect(x + 55, y + 10 + bob - tilt, 3, 3);
+
+    ctx.fillStyle = C.accent;
+    ctx.fillRect(x + 47, y + 15 + bob - tilt, 2, 2);
+    ctx.fillRect(x + 52, y + 15 + bob - tilt, 2, 2);
+
+    ctx.fillRect(x + 14, y + 18 + bob + tilt, 8, 6);
+    ctx.fillRect(x + 28, y + 22 + bob + tilt, 6, 5);
+    ctx.fillRect(x + 38, y + 17 + bob + tilt, 5, 5);
+
     const legOffsets = [
       [0, 2, 0, 2],
       [2, 0, 2, 0],
       [0, 1, 0, 1],
       [2, 0, 2, 0]
     ];
-    const lo = onGround ? legOffsets[step] : [0, 0, 0, 0];
+    const lo = onGround ? legOffsets[step] : (goingUp ? [2, 5, 2, 5] : [5, 2, 5, 2]);
     ctx.fillStyle = C.dark;
     ctx.fillRect(x + 12, y + 34 + lo[0], 5, 14);
     ctx.fillRect(x + 22, y + 34 + lo[1], 5, 14);
     ctx.fillRect(x + 36, y + 34 + lo[2], 5, 14);
     ctx.fillRect(x + 46, y + 34 + lo[3], 5, 14);
-  
-    const tailWag = onGround ? Math.sin(frameCount * 0.15) * 2 : 0;
+
+    const tailWag = onGround ? Math.sin(frameCount * 0.15) * 2 : (goingUp ? -3 : 3);
     ctx.fillRect(x + 4, y + 16 + bob, 3, 12);
     ctx.fillRect(x + 1 + Math.round(tailWag), y + 14 + bob, 4, 4);
-  
-    ctx.fillStyle = C.light;
-    ctx.fillRect(x + 57, y + 20 + bob, 2, 1);
+
+    ctx.fillStyle = C.accent;
+    ctx.fillRect(x + 57, y + 20 + bob - tilt, 2, 1);
   }
 
 function drawObstacle(ob) {
@@ -314,7 +324,7 @@ function drawObstacle(ob) {
 
   ctx.fillRect(x + 2, y + 2, w - 4, h - 2);
 
-  ctx.fillStyle = C.light;
+  ctx.fillStyle = C.accent;
   ctx.fillRect(x + 4, y + 4, 4, 3);
   ctx.fillRect(x + 10, y + 6, 5, 4);
   ctx.fillRect(x + w - 10, y + 4, 5, 3);
@@ -332,7 +342,7 @@ function drawObstacles() {
 
 function drawCoin(coin) {
   const pulse = Math.sin(frameCount * 0.08 + coin.x) * 1;
-  ctx.fillStyle = C.mid;
+  ctx.fillStyle = C.accent;
   ctx.fillRect(coin.x - pulse, coin.y, coin.width + pulse * 2, coin.height);
   ctx.fillStyle = C.light;
   ctx.fillRect(coin.x + 3 - pulse, coin.y + 3, coin.width - 6 + pulse * 2, coin.height - 6);
@@ -465,7 +475,7 @@ function updateSpawning() {
   spawnTimer += 1;
   coinSpawnTimer += 1;
 
-  if (speed > 8 && stars.length < 25 && Math.random() < 0.05) {
+  if (stars.length < 30 && Math.random() < 0.1) {
     spawnStar();
   }
 
@@ -516,20 +526,20 @@ let hillSpawnTimer = 0;
 
 function drawEidBorder() {
   const w = WORLD.width, h = WORLD.height;
-  ctx.strokeStyle = C.mid;
+  ctx.strokeStyle = C.accent;
   ctx.lineWidth = 2;
   ctx.strokeRect(6, 6, w - 12, h - 12);
   ctx.strokeRect(10, 10, w - 20, h - 20);
   for (let i = 0; i < 16; i++) {
     const bx = 10 + ((w - 20) / 16) * i;
-    ctx.fillStyle = i % 2 === 0 ? C.mid : C.dark;
+    ctx.fillStyle = i % 2 === 0 ? C.accent : C.dark;
     ctx.fillRect(bx, 6, (w - 20) / 16, 4);
     ctx.fillRect(bx, h - 10, (w - 20) / 16, 4);
   }
 }
 
 function drawCrescent(cx, cy, r) {
-  ctx.fillStyle = C.light;
+  ctx.fillStyle = C.accent;
   ctx.beginPath();
   ctx.arc(cx, cy, r, 0, Math.PI * 2);
   ctx.fill();
@@ -537,14 +547,14 @@ function drawCrescent(cx, cy, r) {
   ctx.beginPath();
   ctx.arc(cx + r * 0.3, cy - r * 0.2, r * 0.75, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = C.light;
+  ctx.fillStyle = C.accent;
   ctx.fillRect(cx + r * 0.6, cy - r * 0.15, 3, 3);
   ctx.fillRect(cx + r * 0.75, cy + r * 0.1, 2, 2);
   ctx.fillRect(cx + r * 0.5, cy + r * 0.3, 2, 2);
 }
 
 function drawLamp(x, y, s) {
-  ctx.fillStyle = C.mid;
+  ctx.fillStyle = C.accent;
   ctx.fillRect(x - s, y, s * 2, s * 0.5);
   ctx.fillRect(x - s * 0.5, y - s, s, s);
   ctx.fillRect(x - s * 0.8, y - s * 1.5, s * 1.6, s * 0.6);
@@ -559,9 +569,9 @@ function drawSpeedBar() {
   ctx.fillRect(barX, barY, barW, barH);
   ctx.globalAlpha = 1;
   const pct = (speed - 5.6) / 6.4;
-  ctx.fillStyle = C.mid;
+  ctx.fillStyle = C.accent;
   ctx.fillRect(barX + 1, barY + 1, (barW - 2) * pct, barH - 2);
-  ctx.strokeStyle = C.light;
+  ctx.strokeStyle = C.accent;
   ctx.globalAlpha = 0.3;
   ctx.lineWidth = 1;
   ctx.strokeRect(barX, barY, barW, barH);
@@ -595,7 +605,7 @@ function drawGameOver() {
   drawLamp(WORLD.width - 60, 60, 8);
 
   ctx.textAlign = "center";
-  ctx.fillStyle = C.mid;
+  ctx.fillStyle = C.accent;
   ctx.font = "18px 'Press Start 2P'";
   ctx.fillText("Eid al-Adha", WORLD.width / 2, 60);
   ctx.fillStyle = C.light;
@@ -606,34 +616,34 @@ function drawGameOver() {
   ctx.globalAlpha = 0.12;
   ctx.fillRect(WORLD.width / 2 - 130, 100, 260, 130);
   ctx.globalAlpha = 1;
-  ctx.strokeStyle = C.mid;
+  ctx.strokeStyle = C.accent;
   ctx.lineWidth = 1;
   ctx.strokeRect(WORLD.width / 2 - 130, 100, 260, 130);
 
-  ctx.fillStyle = C.light;
+  ctx.fillStyle = C.accent;
   ctx.font = "9px 'Press Start 2P'";
   ctx.fillText(`Score: ${Math.floor(score)}`, WORLD.width / 2, 124);
   ctx.fillText(`Coins: ${coinsCollected}`, WORLD.width / 2, 142);
   ctx.fillText(`Distance: ${Math.floor(dist)}m`, WORLD.width / 2, 160);
 
   if (Math.floor(score) >= highScore && score > 0) {
-    ctx.fillStyle = C.light;
+    ctx.fillStyle = C.accent;
     ctx.fillText("NEW HIGH SCORE!", WORLD.width / 2, 184);
   } else {
-    ctx.fillStyle = C.mid;
+    ctx.fillStyle = C.light;
     ctx.fillText(`Best: ${highScore}`, WORLD.width / 2, 184);
   }
 
   if (maxCombo > 1) {
-    ctx.fillStyle = C.light;
+    ctx.fillStyle = C.accent;
     ctx.fillText(`Combo: ${maxCombo}`, WORLD.width / 2, 204);
   }
 
-  ctx.fillStyle = C.mid;
+  ctx.fillStyle = C.light;
   ctx.font = "8px 'Press Start 2P'";
   ctx.fillText("Press ENTER to replay", WORLD.width / 2, 250);
 
-  ctx.fillStyle = C.mid;
+  ctx.fillStyle = C.light;
   ctx.font = "7px 'Press Start 2P'";
   ctx.fillText("by kanozadev", WORLD.width / 2, 270);
 }

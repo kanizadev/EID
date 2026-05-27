@@ -9,8 +9,8 @@ body {
   display: grid;
   place-items: center;
   padding: 16px;
-  background: #5B7E3C;
-  color: #E8F5BD;
+  background: #2F5249;
+  color: #97B067;
   font-family: "Press Start 2P", monospace;
 }
 
@@ -22,19 +22,19 @@ body {
 h1 {
   font-size: clamp(1.5rem, 3vw, 2rem);
   margin-bottom: 4px;
-  color: #E8F5BD;
-  text-shadow: 2px 2px 0 #5B7E3C;
+  color: #E3DE61;
+  text-shadow: 2px 2px 0 #2F5249;
   letter-spacing: 2px;
 }
 
 .hint {
   font-size: 0.65rem;
   margin-bottom: 8px;
-  color: #A2CB8B;
+  color: #97B067;
 }
 
 .key {
-  color: #E8F5BD;
+  color: #E3DE61;
 }
 
 .hud {
@@ -42,7 +42,7 @@ h1 {
   justify-content: center;
   margin-bottom: 8px;
   font-size: 0.7rem;
-  color: #A2CB8B;
+  color: #97B067;
 }
 
 canvas {
@@ -50,12 +50,12 @@ canvas {
   max-width: 900px;
   height: auto;
   aspect-ratio: 900 / 320;
-  border: 3px solid #A2CB8B;
+  border: 3px solid #E3DE61;
   border-radius: 6px;
-  background: #E8F5BD;
+  background: #97B067;
   image-rendering: pixelated;
   image-rendering: crisp-edges;
   box-shadow:
-    0 0 0 1px #5B7E3C,
+    0 0 0 1px #2F5249,
     0 6px 24px rgba(0,0,0,0.5);
 }
